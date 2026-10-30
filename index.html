@@ -46,6 +46,7 @@
   @media(prefers-reduced-motion:reduce){.fill{transition:none}}
 
 /* KONAN warm orange theme — same geometry, elements and 12-sector arrangement */
+.wheel-area{max-width:375px;margin:11px auto 5px}
 :root{--ink:#fff7ec;--muted:#d4a685;--gold:#ffb24c;--cyan:#ffb762;--bg:#160905;--line:#754128;color-scheme:dark}
 html{background:#160905}
 body{background:radial-gradient(ellipse 80% 38% at 49% 51%,#93481969 0%,transparent 72%),radial-gradient(circle at 15% 78%,#70310f80 0,transparent 45%),linear-gradient(140deg,#140704,#301307 65%,#120603)}
@@ -68,8 +69,8 @@ body:before{opacity:.055}
 <body>
 <main class="app">
   <section class="jackpot" aria-label="عداد الجاكبوت">
-    <div class="jacktop"><div><span class="jtitle">KONAN WHEEL</span><span class="jactive">KONAN</span></div><div class="jright"><span class="smallgold">Prize counter</span><div id="jackpot" class="jamount">$0.00</div></div></div>
-    <div class="barwrap"><div class="track"><div id="progress" class="fill"></div></div><span class="bar-caption">$700 MAX</span></div>
+    <div class="jacktop"><div><span class="jtitle">KONAN WHEEL</span><span class="jactive">KONAN</span></div><div class="jright"><span class="smallgold">عداد العرض</span><div id="jackpot" class="jamount">$0.00</div></div></div>
+    <div class="barwrap"><div class="track"><div id="progress" class="fill"></div></div><span class="bar-caption">KONAN</span></div>
   </section>
   <section class="wheel-area" aria-label="عجلة حظ KONAN">
     <canvas id="wheel" width="900" height="900"></canvas>
@@ -128,15 +129,15 @@ body:before{opacity:.055}
  const slices=[
    {text:'5%',icon:'🎁',fill:'#742c15',type:'bonus'},
    {text:'HARD LUCK',icon:'✦',fill:'#ffd3a4',type:'lose'},
-   {text:'50 ألف',icon:'💰',fill:'#5a2215',type:'money'},
+   {text:'1$',icon:'💰',fill:'#5a2215',type:'money'},
    {text:'10%',icon:'🎁',fill:'#ffd3a4',type:'bonus'},
-   {text:'مليون',icon:'＄',fill:'#793b1e',type:'money'},
+   {text:'100$',icon:'＄',fill:'#793b1e',type:'money'},
    {text:'HARD LUCK',icon:'✦',fill:'#ffcc8b',type:'lose'},
-   {text:'100 ألف',icon:'💰',fill:'#632810',type:'money'},
+   {text:'2$',icon:'💰',fill:'#632810',type:'money'},
    {text:'5%',icon:'🎁',fill:'#f9c27f',type:'bonus'},
-   {text:'500 ألف',icon:'＄',fill:'#643019',type:'money'},
+   {text:'50$',icon:'＄',fill:'#643019',type:'money'},
    {text:'HARD LUCK',icon:'✦',fill:'#ffd5aa',type:'lose'},
-   {text:'250 ألف',icon:'💰',fill:'#71250f',type:'money'},
+   {text:'25$',icon:'💰',fill:'#71250f',type:'money'},
    {text:'JACKPOT',icon:'★',fill:'#edb264',type:'jackpot'},
  ];
  const c=$('wheel'),ctx=c.getContext('2d'),N=slices.length,C=450,R=408,step=2*Math.PI/N;
@@ -147,11 +148,7 @@ body:before{opacity:.055}
    if(s.type==='lose')return [{text:'HARD',size:31},{text:'LUCK',size:31}];
    if(s.type==='bonus')return [{text:s.text,size:48}];
    if(s.type==='jackpot')return [{text:'JACK',size:30},{text:'POT',size:30}];
-   if(s.type==='money'){
-     if(s.text==='مليون')return [{text:'1',size:37},{text:'مليون',size:24}];
-     const amount=s.text.split(' ')[0];
-     return [{text:amount,size:37},{text:'ألف',size:25}];
-   }
+   if(s.type==='money')return [{text:s.text,size:45}];
    return [{text:s.text,size:30}];
  }
  function drawSliceText(s,i,center){
@@ -247,8 +244,8 @@ body:before{opacity:.055}
    const current=((currentRotation%360)+360)%360;
    let advance=(360-((current+(targetIndex*degrees))%360))%360;
    if(advance<4)advance+=360;
-   const final=currentRotation+6*360+advance;
-   const duration=6300;
+   const final=currentRotation+4*360+advance;
+   const duration=3900;
    const area=c.parentElement;
    return new Promise(resolve=>{
      let settled=false;
@@ -295,7 +292,7 @@ body:before{opacity:.055}
      spinBtn.textContent='✅ تم عرض نتيجة اللفة';
    }catch(e){
      stopAudio(sounds.spin);setError(e.message||'خطأ أثناء العرض');
-     spinBtn.textContent='حاول عرض النتيجة مجدداً';spinBtn.disabled=false;playing=false;
+     spinBtn.textContent='افتح لفة جديدة من البوت';spinBtn.disabled=true;
    }
  }
  function init(){
