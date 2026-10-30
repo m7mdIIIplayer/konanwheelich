@@ -129,11 +129,11 @@ body:before{opacity:.055}
  const slices=[
    {text:'5%',icon:'🎁',fill:'#742c15',type:'bonus'},
    {text:'HARD LUCK',icon:'✦',fill:'#ffd3a4',type:'lose'},
-   {text:'1$',icon:'💰',fill:'#5a2215',type:'money'},
+   {text:'5$',icon:'💰',fill:'#5a2215',type:'money'},
    {text:'10%',icon:'🎁',fill:'#ffd3a4',type:'bonus'},
    {text:'100$',icon:'＄',fill:'#793b1e',type:'money'},
    {text:'HARD LUCK',icon:'✦',fill:'#ffcc8b',type:'lose'},
-   {text:'2$',icon:'💰',fill:'#632810',type:'money'},
+   {text:'10$',icon:'💰',fill:'#632810',type:'money'},
    {text:'5%',icon:'🎁',fill:'#f9c27f',type:'bonus'},
    {text:'50$',icon:'＄',fill:'#643019',type:'money'},
    {text:'HARD LUCK',icon:'✦',fill:'#ffd5aa',type:'lose'},
@@ -288,6 +288,8 @@ body:before{opacity:.055}
      await animateTo(round.targetIndex);
      finishSpinAudio(Number(round.bonusPercent)>0||Number(round.award)>0);
      if(navigator.vibrate)navigator.vibrate([60,30,90]);
+     // This link has now displayed its single spin.
+     $('spins').textContent='0';
      const [title,body,icon]=resultText(round);showModal(title,body,icon);
      spinBtn.textContent='✅ تم عرض نتيجة اللفة';
    }catch(e){
@@ -311,8 +313,10 @@ body:before{opacity:.055}
      spinBtn.textContent='بانتظار رابط اللفة';return;
    }
    round={targetIndex:suppliedIndex,award:suppliedAward,bonusPercent:suppliedBonus};
-   const spins=Number(params.get('spinsRemaining'));
-   $('spins').textContent=Number.isSafeInteger(spins)&&spins>=0?spins:0;
+   // Each valid wheel URL contains exactly ONE issued spin, already paid for by the bot.
+   // `spinsRemaining` is the wallet's *other* unused spins after this round was issued.
+   // Do not show 0 when the player has just opened this playable round.
+   $('spins').textContent='1';
    const jackpot=Number(params.get('jackpotAtSpin'));
    updateJackpot(Number.isFinite(jackpot)&&jackpot>=0?jackpot:0);
    displayBonuses(activeBonuses.filter(b=>b.expiresAt>Math.floor(Date.now()/1000)));
