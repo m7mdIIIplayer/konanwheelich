@@ -138,7 +138,7 @@ body:before{opacity:.055}
    {text:'50$',icon:'＄',fill:'#643019',type:'money'},
    {text:'HARD LUCK',icon:'✦',fill:'#ffd5aa',type:'lose'},
    {text:'25$',icon:'💰',fill:'#71250f',type:'money'},
-   {text:'JACKPOT',icon:'★',fill:'#edb264',type:'jackpot'},
+   {text:'JACKPOT',icon:'👑',fill:'#17100b',type:'jackpot'},
  ];
  const c=$('wheel'),ctx=c.getContext('2d'),N=slices.length,C=450,R=408,step=2*Math.PI/N;
 
@@ -163,8 +163,8 @@ body:before{opacity:.055}
    ctx.rotate(center+Math.PI/2+(flip?Math.PI:0));
    ctx.textAlign='center';ctx.textBaseline='middle';
    ctx.direction='ltr';
-   ctx.fillStyle=lightSector?'#582408':'#fff8ed';
-   ctx.strokeStyle=lightSector?'#fff2cc':'#321106';
+   ctx.fillStyle=s.type==='jackpot'?'#f3c660':(lightSector?'#582408':'#fff8ed');
+   ctx.strokeStyle=s.type==='jackpot'?'#060403':(lightSector?'#fff2cc':'#321106');
    ctx.lineWidth=2.5;ctx.lineJoin='round';
    const lineHeight=35;
    lines.forEach((line,j)=>{
