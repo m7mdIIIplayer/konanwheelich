@@ -98,18 +98,23 @@ body:before{opacity:.055}
  if(tg){try{tg.setHeaderColor('#1b0c07');tg.setBackgroundColor('#1b0c07')}catch(_){}}
  const $=id=>document.getElementById(id), spinBtn=$('spin');
  const params=new URLSearchParams(location.search);
- const isDemo=params.get('demo')==='1';
  const suppliedIndex=params.has('targetIndex')?Number(params.get('targetIndex')):NaN;
  const suppliedAward=params.has('award')?Number(params.get('award')):NaN;
  const suppliedBonus=params.has('bonusPercent')?Number(params.get('bonusPercent')):NaN;
- // All results are fixed by KONAN bot BEFORE the URL is sent.
- // Query parameters change visuals ONLY; no balance or bonus is credited here.
-  // Display-only. No balance changes are performed by this page.
-  // Only the three enabled outcomes may be shown as actual results.
-  const validRound=Number.isInteger(suppliedIndex)&&suppliedAward===0&&(
-      (suppliedBonus===5 && [0,7].includes(suppliedIndex)) ||
-      (suppliedBonus===10 && suppliedIndex===3) ||
-      (suppliedBonus===0 && [1,5,9].includes(suppliedIndex)));
+ const jackpotValue=params.has('jackpotAtSpin')?Number(params.get('jackpotAtSpin')):NaN;
+ const isValidJackpotValue=Number.isSafeInteger(jackpotValue)&&jackpotValue>0&&jackpotValue<=100000;
+ // A jackpot preview can specify the display amount via jackpotAtSpin alone.
+ // Display-only prize previews never transfer funds or write balances.
+ const effectiveAward=(suppliedIndex===11 && isValidJackpotValue)?jackpotValue:suppliedAward;
+ const prizePreview=(suppliedBonus===0 && (
+   (suppliedIndex===4 && effectiveAward===100) ||
+   (suppliedIndex===11 && Number.isSafeInteger(effectiveAward) && effectiveAward>0 && effectiveAward<=100000)
+ ));
+ // Actual bot-issued results retain the same permitted outcomes as before.
+ const validRound=(Number.isInteger(suppliedIndex)&&suppliedAward===0&&(
+   (suppliedBonus===5 && [0,7].includes(suppliedIndex)) ||
+   (suppliedBonus===10 && suppliedIndex===3) ||
+   (suppliedBonus===0 && [1,5,9].includes(suppliedIndex)))) || prizePreview;
 
  // The bot passes compact integer snapshots using '.' as record separator
  // and ',' as field separator; absolutely no JSON / API / fetch needed.
@@ -279,7 +284,7 @@ body:before{opacity:.055}
      watchdog=setTimeout(finish,duration+900);
    });
  }
- function resultText(r){if(r.bonusPercent)return ['🎁 بونص +'+r.bonusPercent+'%','صار عندك بونص على أول عملية شحن ناجحة خلال 24 ساعة.','🎁'];if(r.award)return ['🎉 مبروك! '+showAmount(r.award)+' ل.س قديمة','الجائزة أضيفت تلقائياً إلى رصيدك داخل البوت.','💰'];return ['✨ حظ أوفر باللفة الجاية','حاول مجدداً بعد حصولك على لفة من عملية شحن مؤهلة.','🎡']}
+ function resultText(r){if(prizePreview){return r.targetIndex===11?['👑 JACKPOT $'+showAmount(r.award),'معاينة تصميم الجاكبوت — بدون تغيير الرصيد.','👑']:['💰 100$','معاينة تصميم جائزة 100$ — بدون تغيير الرصيد.','💰'];}if(r.bonusPercent)return ['🎁 بونص +'+r.bonusPercent+'%','صار عندك بونص على أول عملية شحن ناجحة خلال 24 ساعة.','🎁'];if(r.award)return ['🎉 مبروك! '+showAmount(r.award)+' ل.س قديمة','الجائزة أضيفت تلقائياً إلى رصيدك داخل البوت.','💰'];return ['✨ حظ أوفر باللفة الجاية','حاول مجدداً بعد حصولك على لفة من عملية شحن مؤهلة.','🎡']}
  async function startSpin(){
    if(playing||!round)return;
    playing=true;spinBtn.disabled=true;spinBtn.textContent='🎡 العجلة تدور...';setError('');
@@ -298,27 +303,22 @@ body:before{opacity:.055}
    }
  }
  function init(){
-   if(isDemo){
-     $('userName').textContent='KONAN DEMO';
-     $('userHandle').textContent='وضع معاينة فقط';
-     round={targetIndex:0,bonusPercent:5,award:0};
-     $('spins').textContent='1';updateJackpot(125);
-     displayBonuses([]);displayUsedBonuses([]);
-     spinBtn.textContent='🎡 لف العجلة (معاينة)';spinBtn.disabled=false;return;
-   }
    if(!validRound){
      $('spins').textContent='0';updateJackpot(0);
      displayBonuses([]);displayUsedBonuses([]);
      setError('افتح العجلة من زر بوت KONAN للحصول على نتيجة لفة جديدة.');
      spinBtn.textContent='بانتظار رابط اللفة';return;
    }
-   round={targetIndex:suppliedIndex,award:suppliedAward,bonusPercent:suppliedBonus};
+   round={targetIndex:suppliedIndex,award:effectiveAward,bonusPercent:suppliedBonus};
    // Each valid wheel URL contains exactly ONE issued spin, already paid for by the bot.
    // `spinsRemaining` is the wallet's *other* unused spins after this round was issued.
    // Do not show 0 when the player has just opened this playable round.
    $('spins').textContent='1';
-   const jackpot=Number(params.get('jackpotAtSpin'));
-   updateJackpot(Number.isFinite(jackpot)&&jackpot>=0?jackpot:0);
+   // The large jackpot counter follows the URL amount. For older jackpot-preview
+   // URLs that only specify award, show that same amount on the counter.
+   const shownJackpot=Number.isFinite(jackpotValue)&&jackpotValue>=0?jackpotValue:
+     (prizePreview&&suppliedIndex===11?effectiveAward:0);
+   updateJackpot(shownJackpot);
    displayBonuses(activeBonuses.filter(b=>b.expiresAt>Math.floor(Date.now()/1000)));
    displayUsedBonuses(usedBonuses);
    spinBtn.textContent='🎡 لف العجلة الآن';spinBtn.disabled=false;
