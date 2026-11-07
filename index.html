@@ -283,7 +283,7 @@ html{overflow-x:hidden}
    {text:'50$',icon:'＄',fill:'#643019',type:'money'},
    {text:'HARD LUCK',icon:'✦',fill:'#ffd5aa',type:'lose'},
    {text:'25$',icon:'💰',fill:'#71250f',type:'money'},
-   {text:'JACKPOT',icon:'👑',fill:'#17100b',type:'jackpot'},
+   {text:'JACKPOT',icon:'👑',fill:'#fff0c3',type:'jackpot'},
  ];
  // Appearance-only 50% test: the actual 10% prize stays unchanged for real spins.
  if(prizePreview && suppliedIndex===3 && suppliedBonus===50){
@@ -296,7 +296,7 @@ html{overflow-x:hidden}
  function wheelLabel(s){
    if(s.type==='lose')return [{text:'HARD',size:31},{text:'LUCK',size:31}];
    if(s.type==='bonus')return [{text:s.text,size:48}];
-   if(s.type==='jackpot')return [{text:'JACK',size:30},{text:'POT',size:30}];
+   if(s.type==='jackpot')return [{text:'JACK',size:32},{text:'POT',size:32}];
    if(s.type==='money')return [{text:s.text,size:45}];
    return [{text:s.text,size:30}];
  }
@@ -312,8 +312,8 @@ html{overflow-x:hidden}
    ctx.rotate(center+Math.PI/2+(flip?Math.PI:0));
    ctx.textAlign='center';ctx.textBaseline='middle';
    ctx.direction='ltr';
-   ctx.fillStyle=s.type==='jackpot'?'#f3c660':(lightSector?'#582408':'#fff8ed');
-   ctx.strokeStyle=s.type==='jackpot'?'#060403':(lightSector?'#fff2cc':'#321106');
+   ctx.fillStyle=s.type==='jackpot'?'#4d280c':(lightSector?'#582408':'#fff8ed');
+   ctx.strokeStyle=s.type==='jackpot'?'#fff7db':(lightSector?'#fff2cc':'#321106');
    ctx.lineWidth=2.5;ctx.lineJoin='round';
    const lineHeight=35;
    lines.forEach((line,j)=>{
@@ -339,11 +339,44 @@ html{overflow-x:hidden}
    ctx.beginPath();ctx.arc(C,C,435,0,2*Math.PI);ctx.fillStyle=halo;ctx.fill();ctx.lineWidth=8;ctx.strokeStyle='#682a0f';ctx.stroke();
    slices.forEach((s,i)=>{
      const center=-Math.PI/2+i*step,start=center-step/2,end=center+step/2;
-     ctx.beginPath();ctx.moveTo(C,C);ctx.arc(C,C,R,start,end);ctx.closePath();ctx.fillStyle=s.fill;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#693214';ctx.stroke();
+     const isJackpot=s.type==='jackpot';
+     // Light champagne-gold JACKPOT: a luminous metallic finish, while all
+     // other sectors and the server-side prize order remain untouched.
+     let sectorPaint=s.fill;
+     if(isJackpot){
+       const gold=ctx.createRadialGradient(C,C,20,C,C,R);
+       gold.addColorStop(0,'#d7a24e');
+       gold.addColorStop(.25,'#f6db98');
+       gold.addColorStop(.55,'#fff8df');
+       gold.addColorStop(.77,'#ffe3a2');
+       gold.addColorStop(1,'#e4ab54');
+       sectorPaint=gold;
+     }
+     ctx.beginPath();ctx.moveTo(C,C);ctx.arc(C,C,R,start,end);ctx.closePath();
+     ctx.fillStyle=sectorPaint;ctx.fill();
+     ctx.lineWidth=isJackpot?4:2;ctx.strokeStyle=isJackpot?'#fff3c7':'#693214';ctx.stroke();
+     if(isJackpot){
+       // A double metallic rim makes the special wedge instantly recognizable.
+       ctx.save();
+       ctx.beginPath();ctx.moveTo(C,C);
+       ctx.arc(C,C,R-11,start+.018,end-.018);ctx.closePath();
+       ctx.lineWidth=2;ctx.strokeStyle='#ac702e9e';ctx.stroke();
+       ctx.beginPath();ctx.arc(C,C,R-18,start+.026,end-.026);
+       ctx.lineWidth=4;ctx.strokeStyle='#fffce6ab';ctx.stroke();
+       ctx.restore();
+     }
      const cos=Math.cos(center),sin=Math.sin(center);
      ctx.save();ctx.translate(C+cos*331,C+sin*331);
-     ctx.beginPath();ctx.arc(0,0,42,0,Math.PI*2);ctx.fillStyle=(i%2?'#fff6e2':'#ffe3a8');ctx.fill();
-     ctx.font='bold 40px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#673011';ctx.fillText(s.icon,0,2);ctx.restore();
+     ctx.beginPath();ctx.arc(0,0,42,0,Math.PI*2);
+     if(isJackpot){
+       const medal=ctx.createRadialGradient(-12,-15,4,0,0,47);
+       medal.addColorStop(0,'#885117');medal.addColorStop(.65,'#4a250d');medal.addColorStop(1,'#261205');
+       ctx.fillStyle=medal;ctx.shadowColor='#fff2b9';ctx.shadowBlur=14;
+     }else{ctx.fillStyle=(i%2?'#fff6e2':'#ffe3a8');}
+     ctx.fill();
+     if(isJackpot){ctx.shadowBlur=0;ctx.lineWidth=4;ctx.strokeStyle='#ffe5a0';ctx.stroke();}
+     ctx.font='bold 40px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+     ctx.fillStyle=isJackpot?'#fff6db':'#673011';ctx.fillText(s.icon,0,2);ctx.restore();
      drawSliceText(s,i,center);
    });
    ctx.beginPath();ctx.arc(C,C,410,0,Math.PI*2);ctx.lineWidth=11;ctx.strokeStyle='#ffa443';ctx.stroke();
@@ -473,9 +506,9 @@ html{overflow-x:hidden}
      jackpotCounterRaf=requestAnimationFrame(tick);
    }
    $('jackpotWinTitle').textContent=isPreview?'عرض الجائزة الكبرى':'الجائزة الكبرى';
-   $('jackpotWinText').textContent=isPreview?'معاينة مظهر احتفال الجاكبوت بالثيم الطبيعي.':'نتيجة عرض الجاكبوت داخل عجلة KONAN.';
+   $('jackpotWinText').textContent=isPreview?'تم ربح الجاكبوت':'نتيجة عرض الجاكبوت داخل عجلة KONAN.';
    $('jackpotWinState').textContent=isPreview?
-     'معاينة واجهة فقط — لا يُضاف أي رصيد ولا تُسجَّل جائزة.':
+     'ألف مبروك':
      'لعرض الرصيد الفعلي راجع محفظتك في البوت.';
    $('jackpotWinState').hidden=false;
    const modal=$('jackpotModal');modal.setAttribute('aria-hidden','false');modal.classList.add('show');
@@ -527,350 +560,6 @@ html{overflow-x:hidden}
  $('jackpotContinue').addEventListener('click',closeJackpot);
  $('jackpotExit').addEventListener('click',closeJackpot);
  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&$('jackpotModal').classList.contains('show'))closeJackpot()});
- $('historyClose').addEventListener('click',()=>$('historyModal').classList.remove('show'));
- $('historyBtn').addEventListener('click',()=>{
-   const rows=$('historyRows');rows.replaceChildren();$('historyModal').classList.add('show');
-   if(!history.length){rows.innerHTML='<div class="empty">ما عندك أي لفات مسجّلة في هذا الرابط.</div>';return;}
-   history.forEach(h=>{
-     const div=document.createElement('div');div.className='entry';
-     const item=document.createElement('div'),title=document.createElement('b'),date=document.createElement('small');
-     title.textContent=h.bonusPercent?'🎁 بونص '+h.bonusPercent+'%':h.amount?'💰 '+showAmount(h.amount)+' ل.س':'🎡 حظ أوفر';
-     date.textContent='لفة KONAN';item.append(title,date);
-     const time=document.createElement('time');time.textContent=formatTime(h.createdAt);
-     div.append(item,time);rows.appendChild(div);
-   });
- });
- init();
-})();
-</script>
-</body>
-</html><!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" />
-<meta name="theme-color" content="#1b0c07" />
-<title>KONAN | عجلة الحظ</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<style>
-  :root{color-scheme:dark;--ink:#f7fbff;--muted:#91afbf;--gold:#f4bd44;--cyan:#65d8f2;--bg:#040b12;--line:#23445a}
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html{min-height:100%;background:var(--bg)}
-  body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;color:var(--ink);
-    background:radial-gradient(ellipse 80% 38% at 49% 51%,#184962a3 0%,transparent 72%),radial-gradient(circle at 15% 78%,#0b3455 0,transparent 45%),linear-gradient(140deg,#02070b,#091a2a 65%,#02060b);overflow-x:hidden}
-  body:before{content:"";pointer-events:none;position:fixed;inset:0;opacity:.16;background-image:url("data:image/png;base64,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");background-repeat:repeat}
-  .app{position:relative;margin:auto;width:min(100%,510px);min-height:100vh;padding:15px 16px max(22px,env(safe-area-inset-bottom));display:flex;flex-direction:column}
-  .jackpot{position:relative;background:linear-gradient(122deg,#35301a,#121518 53%,#090e16);border:1px solid #9e7b22;border-right:3px solid #f7c530;border-radius:4px 13px 4px 13px;padding:9px 13px 11px;box-shadow:0 12px 32px #0009,inset 0 0 26px #ffe26512}
-  .jacktop{display:flex;justify-content:space-between;align-items:end;gap:8px}
-  .jtitle{font-size:13px;letter-spacing:.6px;font-weight:1000}.jactive{border:1px solid #d7b635;border-radius:9px;color:#ffe165;font-size:10px;padding:1px 7px;margin-inline-start:4px}
-  .jright{text-align:left;line-height:1.05}.smallgold{font-size:10px;color:#ffe360;font-weight:850}.jamount{font-size:clamp(27px,8vw,38px);font-weight:1000;letter-spacing:-.5px;text-shadow:0 2px 0 #413112;direction:ltr;font-variant-numeric:tabular-nums}
-  .barwrap{display:flex;gap:9px;align-items:center;margin-top:9px}.track{height:9px;flex:1;border-radius:9px;overflow:hidden;background:#0a1625;position:relative;border:1px solid #50648a}
-  .fill{height:100%;width:0%;background:repeating-linear-gradient(120deg,#78eafa 0 10px,#5a99fd 10px 21px,#9e73ff 21px 33px);box-shadow:0 0 18px #88edff;transition:width .7s ease}
-  .track:after{content:"";position:absolute;inset:0;background:linear-gradient(transparent,#fff3,transparent)}.bar-caption{font-size:10px;color:#fff095;white-space:nowrap;font-weight:900}
-  .disclaimer{margin:7px 0 0;text-align:center;color:#a1bbc9;font-size:10px}
-  .wheel-area{position:relative;width:100%;max-width:455px;aspect-ratio:1;margin:16px auto 8px;display:grid;place-items:center}
-  /* Keep the glow/shadow on a STATIONARY element; never filter the rotating canvas' ancestor. */
-  .wheel-area:after{content:"";position:absolute;z-index:-1;inset:9%;border-radius:50%;box-shadow:0 18px 24px 6px #0008;pointer-events:none}
-  .wheel-area:before{content:"";position:absolute;inset:9%;border-radius:50%;box-shadow:0 0 60px 13px #2876a755;pointer-events:none}
-  #wheel{display:block;width:100%;height:100%;transform:translate3d(0,0,0) rotate(0deg);transform-origin:50% 50%;backface-visibility:hidden}
-  /* Reserve the GPU layer only while spinning, not during idle/browsing. */
-  .wheel-area.is-spinning #wheel{will-change:transform}
-  .pointer{position:absolute;z-index:5;width:15%;height:17%;top:-2.1%;left:42.5%;filter:drop-shadow(0px 4px 3px #000a)}
-  .pointer svg{width:100%;height:100%}.hub{position:absolute;z-index:4;inset:41%;border-radius:50%;display:grid;place-items:center;text-align:center;color:#442003;font-weight:1000;font-size:clamp(13px,4vw,19px);font-style:italic;letter-spacing:-1px;background:radial-gradient(circle at 25% 18%,#fff3a0,#f5b534 50%,#ab5b0d 78%);border:4px solid #ffde66;box-shadow:inset 0 0 4px #fff,0 0 2px 3px #683604,inset 0 -9px 9px #9e5209}
-  .game-control{display:flex;align-items:center;gap:9px;margin-top:-1px}.spin{flex:1;min-height:54px;cursor:pointer;border:1px solid #e5b84e;border-radius:10px;background:linear-gradient(100deg,#fed875,#d88b1b 53%,#f8d15a);box-shadow:inset 0 1px 3px #fff9,0 5px 0 #7f4811,0 8px 25px #0009;color:#251509;font-weight:1000;font-size:19px;letter-spacing:.2px;transition:filter .2s,transform .1s}
-  .spin:active{transform:translateY(3px);box-shadow:0 2px 0 #7f4811}.spin:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.5)}
-  .mini-stat{min-width:94px;min-height:54px;padding:7px 9px;border:1px solid #526675;background:#091421;border-radius:9px;text-align:center}.mini-stat label{font-size:10px;display:block;color:#b4c4d2;font-weight:850}.mini-stat strong{font-size:25px;line-height:1.1;display:block;color:#fff}
-  .account{margin:18px 0 12px;display:flex;align-items:center;gap:10px;justify-content:space-between}.person{display:flex;align-items:center;gap:9px;min-width:0}.avatar{width:39px;height:39px;flex-shrink:0;border-radius:50%;border:1px solid #517387;display:grid;place-items:center;background:#263340;font-size:21px}
-  .who{min-width:0}.who b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.who small{display:block;font-size:11px;color:#9ab2c5;white-space:nowrap}.other{background:#0c1c2b;border:1px solid #416176;border-radius:8px;padding:9px 11px;color:#d8f1ff;cursor:pointer;font:700 12px inherit;white-space:nowrap}
-  .panel{margin-top:10px;border:1px solid #25465b;border-radius:12px;padding:13px;background:linear-gradient(145deg,#0d2131ec,#08121dde);box-shadow:0 9px 30px #0004}
-  .panelhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.panelhead b{font-size:14px}.badge{color:#83e9ff;font-size:11px;font-weight:800}
-  .bonuses{display:grid;gap:8px}.bonus{border:1px solid #3a6a77;border-radius:9px;padding:10px 11px;background:#0e2d37;display:flex;justify-content:space-between;align-items:center;gap:7px}.bonus strong{color:#99ffee;font-size:15px}.bonus small{color:#bbcedb;font-size:11px}.empty{padding:12px 4px;color:#92acb9;text-align:center;font-size:12px}
-  .tip{font-size:11px;line-height:1.65;color:#8ea8b5;margin:10px 1px 0;text-align:center}.error{display:none;border:1px solid #a74c4c;border-radius:8px;margin-top:10px;padding:10px;color:#ffd0d0;background:#3b1519;font-size:12px;text-align:center}
-  .overlay{position:fixed;inset:0;z-index:10;background:#01070dd9;backdrop-filter:blur(7px);display:none;align-items:center;justify-content:center;padding:18px}.overlay.show{display:flex}.dialog{max-width:410px;width:100%;background:linear-gradient(#102e42,#08131f);border:1px solid #6cb1c3;border-radius:18px;padding:20px;box-shadow:0 25px 90px #000d;text-align:center}.bigemoji{font-size:48px}.dialog h2{font-size:22px;margin:8px 0;color:#ffdb77}.dialog p{color:#cbdce8;font-size:14px;line-height:1.65;white-space:pre-line}.close{font:850 14px system-ui;border-radius:9px;border:1px solid #397587;background:#143446;color:#e2f9ff;cursor:pointer;padding:11px 17px;width:100%;margin-top:8px}.historyRows{max-height:56vh;overflow:auto;text-align:right}.entry{padding:12px 3px;border-bottom:1px solid #28506a;display:flex;gap:10px;justify-content:space-between;align-items:center}.entry b{display:block;font-size:13px}.entry small{font-size:11px;color:#9db6c7}.entry time{color:#96aabe;display:block;font-size:11px;direction:ltr;text-align:left}
-  @media(max-width:370px){.app{padding-inline:10px}.wheel-area{margin-top:12px}.jtitle{font-size:12px}.jamount{font-size:27px}.other{padding:8px;font-size:11px}}
-  @media(min-height:790px){.wheel-area{margin-top:22px;margin-bottom:15px}}
-  @media(prefers-reduced-motion:reduce){.fill{transition:none}}
-
-/* KONAN warm orange theme — same geometry, elements and 12-sector arrangement */
-.wheel-area{max-width:375px;margin:11px auto 5px}
-:root{--ink:#fff7ec;--muted:#d4a685;--gold:#ffb24c;--cyan:#ffb762;--bg:#160905;--line:#754128;color-scheme:dark}
-html{background:#160905}
-body{background:radial-gradient(ellipse 80% 38% at 49% 51%,#93481969 0%,transparent 72%),radial-gradient(circle at 15% 78%,#70310f80 0,transparent 45%),linear-gradient(140deg,#140704,#301307 65%,#120603)}
-body:before{opacity:.055}
-.jackpot{background:linear-gradient(122deg,#643014,#30190d 53%,#1b0c07);border-color:#cb7329;border-right-color:#ffb34a;box-shadow:0 12px 32px #0009,inset 0 0 26px #ffa44913}
-.jactive{border-color:#e9a447;color:#ffe1a2}.smallgold{color:#ffdc8f}.jamount{color:#ffe5bf;text-shadow:0 2px 0 #54230d}
-.track{background:#241006;border-color:#ad6a35}.fill{background:repeating-linear-gradient(120deg,#ffd792 0 10px,#f5a33f 10px 21px,#da671b 21px 33px);box-shadow:0 0 18px #f8a74a}.bar-caption{color:#ffd5a1}
-.wheel-area:before{box-shadow:0 0 60px 13px #c9682950}
-.hub{color:#441700;background:radial-gradient(circle at 25% 18%,#fff0ab,#ffad46 50%,#9f480b 78%);border-color:#ffe49a}
-.pointer{filter:drop-shadow(0 4px 3px #190900ab)}
-.spin{background:linear-gradient(100deg,#ffe19d,#f38c2b 53%,#ffcc75);border-color:#ffc46d;box-shadow:inset 0 1px 3px #fff8,0 5px 0 #8e3d0b,0 8px 25px #0009;color:#2a0c03}
-.mini-stat,.other{background:#2b150c;border-color:#884b27;color:#ffedd6}
-.mini-stat label,.who small{color:#d9b08a}.avatar{background:#5d311a;border-color:#a36c3c}
-.panel{background:linear-gradient(145deg,#39200fe8,#200f08de);border-color:#804620}
-.panel .badge{color:#ffc17a}.bonus{background:#522b15;border-color:#915529}.bonus strong{color:#ffda8c}.bonus small,.empty,.tip{color:#d9b492}
-.dialog{background:linear-gradient(#57290f,#1b0e08);border-color:#d9893d}.dialog h2{color:#ffd38d}.dialog p{color:#ffebd5}
-.close{background:#753915;border-color:#d58a49;color:#ffedd6}.entry{border-bottom-color:#7d421c}.entry small,.entry time{color:#d6ac8a}
-</style>
-</head>
-<body>
-<main class="app">
-  <section class="jackpot" aria-label="عداد الجاكبوت">
-    <div class="jacktop"><div><span class="jtitle">KONAN WHEEL</span><span class="jactive">KONAN</span></div><div class="jright"><span class="smallgold">عداد العرض</span><div id="jackpot" class="jamount">$0.00</div></div></div>
-    <div class="barwrap"><div class="track"><div id="progress" class="fill"></div></div><span class="bar-caption">KONAN</span></div>
-  </section>
-  <section class="wheel-area" aria-label="عجلة حظ KONAN">
-    <canvas id="wheel" width="900" height="900"></canvas>
-    <div class="hub">KONAN</div>
-    <div class="pointer" aria-hidden="true"><svg viewBox="0 0 90 120"><defs><linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff6a7"/><stop offset=".5" stop-color="#ffb826"/><stop offset="1" stop-color="#8e4507"/></linearGradient></defs><path d="M11 22Q45 -3 79 22L49 99Q45 112 41 99Z" fill="url(#gold)" stroke="#ffde68" stroke-width="5"/><path d="M26 24L45 84L62 24" fill="none" stroke="#fff0a3" stroke-width="5" opacity=".85"/></svg></div>
-  </section>
-  <div class="game-control"><button id="spin" class="spin" disabled>⏳ جاري التحميل...</button><div class="mini-stat"><label>SPINS</label><strong id="spins">—</strong></div></div>
-  <p id="error" class="error" role="alert"></p>
-  <div class="account"><div class="person"><div class="avatar">👤</div><div class="who"><b id="userName">KONAN PLAYER</b><small id="userHandle">@KONAN</small></div></div><button id="historyBtn" class="other" type="button">↶ آخر 10 لفات</button></div>
-  <section class="panel"><div class="panelhead"><b>🎁 البونصات المفعّلة حالياً</b><span class="badge">صالحة 24 ساعة</span></div><div id="bonuses" class="bonuses"><div class="empty">ستظهر البونصات المفعّلة وقت إصدار الرابط.</div></div></section>
-  <section class="panel"><div class="panelhead"><b>✅ بونصات العجلة المصروفة على الشحن</b><span class="badge">سجل آخر 10</span></div><div id="usedBonuses" class="bonuses"><div class="empty">لا يوجد سجل لاستخدام بونصات العجلة.</div></div></section>
-  <p class="tip">🎟️ تُمنح اللفة وفق نقاط الحظ المتاحة في البوت. البونصات صالحة 24 ساعة للشحن المؤكد عبر شام كاش، ويمكن جمعها.<br>الجوائز النقدية والجاكبوت المعروضة على العجلة غير مفعّلة حالياً.</p>
-<p class="tip">ℹ️ هذه المعلومات لقطة وقت إصدار الرابط. لمعرفة أحدث بونصاتك ولفاتك، افتح لفة جديدة من البوت.</p>
-</main>
-<div class="overlay" id="resultModal"><div class="dialog"><div id="resultEmoji" class="bigemoji">🎉</div><h2 id="resultTitle">KONAN</h2><p id="resultDescription"></p><button class="close" id="resultClose">متابعة</button></div></div>
-<div class="overlay" id="historyModal"><div class="dialog"><h2>🎡 آخر 10 لفات</h2><div id="historyRows" class="historyRows"></div><button class="close" id="historyClose">إغلاق</button></div></div>
-<!-- Put the existing spin.wav, win.wav, and lose.wav files alongside index.html -->
-<audio id="wheelSpinSound" preload="auto" src="./spin.wav" loop></audio>
-<audio id="wheelWinSound" preload="auto" src="./win.wav"></audio>
-<audio id="wheelLoseSound" preload="auto" src="./lose.wav"></audio>
-<script>
-(()=>{'use strict';
- const tg=window.Telegram?.WebApp;
- tg?.ready();tg?.expand();
- if(tg){try{tg.setHeaderColor('#1b0c07');tg.setBackgroundColor('#1b0c07')}catch(_){}}
- const $=id=>document.getElementById(id), spinBtn=$('spin');
- const params=new URLSearchParams(location.search);
- const suppliedIndex=params.has('targetIndex')?Number(params.get('targetIndex')):NaN;
- const suppliedAward=params.has('award')?Number(params.get('award')):NaN;
- const suppliedBonus=params.has('bonusPercent')?Number(params.get('bonusPercent')):NaN;
- const jackpotValue=params.has('jackpotAtSpin')?Number(params.get('jackpotAtSpin')):NaN;
- const isValidJackpotValue=Number.isSafeInteger(jackpotValue)&&jackpotValue>0&&jackpotValue<=100000;
- // A jackpot preview can specify the display amount via jackpotAtSpin alone.
- // Display-only prize previews never transfer funds or write balances.
- const effectiveAward=(suppliedIndex===11 && isValidJackpotValue)?jackpotValue:suppliedAward;
- const prizePreview=(suppliedBonus===0 && (
-   (suppliedIndex===4 && effectiveAward===100) ||
-   (suppliedIndex===11 && Number.isSafeInteger(effectiveAward) && effectiveAward>0 && effectiveAward<=100000)
- ));
- // Actual bot-issued results retain the same permitted outcomes as before.
- const validRound=(Number.isInteger(suppliedIndex)&&suppliedAward===0&&(
-   (suppliedBonus===5 && [0,7].includes(suppliedIndex)) ||
-   (suppliedBonus===10 && suppliedIndex===3) ||
-   (suppliedBonus===0 && [1,5,9].includes(suppliedIndex)))) || prizePreview;
-
- // The bot passes compact integer snapshots using '.' as record separator
- // and ',' as field separator; absolutely no JSON / API / fetch needed.
- function readRows(key,columns,limit=30){
-   const value=params.get(key)||'';
-   if(value.length>5000)return [];
-   return value.split('.').filter(Boolean).slice(0,limit).map(part=>part.split(',').map(Number))
-     .filter(row=>row.length===columns&&row.every(n=>Number.isSafeInteger(n)&&n>=0));
- }
- const activeBonuses=readRows('active',2).map(([percent,expiresAt])=>({percent,expiresAt}));
- const usedBonuses=readRows('used',3,10).map(([percent,amount,appliedAt])=>({percent,amount,appliedAt}));
- const history=readRows('history',4,10).map(([targetIndex,amount,bonusPercent,createdAt])=>({targetIndex,amount,bonusPercent,createdAt}));
- const username=tg?.initDataUnsafe?.user;
- if(username){$('userName').textContent=[username.first_name,username.last_name].filter(Boolean).join(' ')||'KONAN PLAYER';$('userHandle').textContent=username.username?'@'+username.username:'Telegram User';}
- // Same 12 sectors and the same server-side targetIndex order.
- // Only the visible text and its canvas layout are changed here.
- const slices=[
-   {text:'5%',icon:'🎁',fill:'#742c15',type:'bonus'},
-   {text:'HARD LUCK',icon:'✦',fill:'#ffd3a4',type:'lose'},
-   {text:'5$',icon:'💰',fill:'#5a2215',type:'money'},
-   {text:'10%',icon:'🎁',fill:'#ffd3a4',type:'bonus'},
-   {text:'100$',icon:'＄',fill:'#793b1e',type:'money'},
-   {text:'HARD LUCK',icon:'✦',fill:'#ffcc8b',type:'lose'},
-   {text:'10$',icon:'💰',fill:'#632810',type:'money'},
-   {text:'5%',icon:'🎁',fill:'#f9c27f',type:'bonus'},
-   {text:'50$',icon:'＄',fill:'#643019',type:'money'},
-   {text:'HARD LUCK',icon:'✦',fill:'#ffd5aa',type:'lose'},
-   {text:'25$',icon:'💰',fill:'#71250f',type:'money'},
-   {text:'JACKPOT',icon:'👑',fill:'#17100b',type:'jackpot'},
- ];
- const c=$('wheel'),ctx=c.getContext('2d'),N=slices.length,C=450,R=408,step=2*Math.PI/N;
-
- // Fit every label INSIDE its own 30° sector, including on small screens.
- // Canvas is 900x900 and scales down uniformly on phones.
- function wheelLabel(s){
-   if(s.type==='lose')return [{text:'HARD',size:31},{text:'LUCK',size:31}];
-   if(s.type==='bonus')return [{text:s.text,size:48}];
-   if(s.type==='jackpot')return [{text:'JACK',size:30},{text:'POT',size:30}];
-   if(s.type==='money')return [{text:s.text,size:45}];
-   return [{text:s.text,size:30}];
- }
- function drawSliceText(s,i,center){
-   const radius=239;
-   const cos=Math.cos(center),sin=Math.sin(center);
-   const normal=(center+Math.PI*2)%(Math.PI*2);
-   const flip=normal>0 && normal<Math.PI; // keep lower-half labels upright
-   const lines=wheelLabel(s);
-   const lightSector=(i%2===1);
-   ctx.save();
-   ctx.translate(C+cos*radius,C+sin*radius);
-   ctx.rotate(center+Math.PI/2+(flip?Math.PI:0));
-   ctx.textAlign='center';ctx.textBaseline='middle';
-   ctx.direction='ltr';
-   ctx.fillStyle=s.type==='jackpot'?'#f3c660':(lightSector?'#582408':'#fff8ed');
-   ctx.strokeStyle=s.type==='jackpot'?'#060403':(lightSector?'#fff2cc':'#321106');
-   ctx.lineWidth=2.5;ctx.lineJoin='round';
-   const lineHeight=35;
-   lines.forEach((line,j)=>{
-     const y=(j-(lines.length-1)/2)*lineHeight;
-     // Calculate usable wedge width at the innermost edge of each line.
-     // Extra padding prevents text from touching the radial boundaries.
-     const minRadius=radius-Math.abs(y)-line.size/2;
-     const maxWidth=2*minRadius*Math.sin(step/2)-19;
-     let size=line.size;
-     ctx.font=`900 ${size}px Tahoma,Arial,sans-serif`;
-     while(ctx.measureText(line.text).width>maxWidth && size>17){
-       size--;
-       ctx.font=`900 ${size}px Tahoma,Arial,sans-serif`;
-     }
-     ctx.strokeText(line.text,0,y,maxWidth);
-     ctx.fillText(line.text,0,y,maxWidth);
-   });
-   ctx.restore();
- }
- function drawWheel(){
-   ctx.clearRect(0,0,900,900);
-   const halo=ctx.createRadialGradient(C,C,320,C,C,439);halo.addColorStop(0,'#723818');halo.addColorStop(.8,'#ffaf43');halo.addColorStop(1,'#52200c');
-   ctx.beginPath();ctx.arc(C,C,435,0,2*Math.PI);ctx.fillStyle=halo;ctx.fill();ctx.lineWidth=8;ctx.strokeStyle='#682a0f';ctx.stroke();
-   slices.forEach((s,i)=>{
-     const center=-Math.PI/2+i*step,start=center-step/2,end=center+step/2;
-     ctx.beginPath();ctx.moveTo(C,C);ctx.arc(C,C,R,start,end);ctx.closePath();ctx.fillStyle=s.fill;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#693214';ctx.stroke();
-     const cos=Math.cos(center),sin=Math.sin(center);
-     ctx.save();ctx.translate(C+cos*331,C+sin*331);
-     ctx.beginPath();ctx.arc(0,0,42,0,Math.PI*2);ctx.fillStyle=(i%2?'#fff6e2':'#ffe3a8');ctx.fill();
-     ctx.font='bold 40px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#673011';ctx.fillText(s.icon,0,2);ctx.restore();
-     drawSliceText(s,i,center);
-   });
-   ctx.beginPath();ctx.arc(C,C,410,0,Math.PI*2);ctx.lineWidth=11;ctx.strokeStyle='#ffa443';ctx.stroke();
-   ctx.beginPath();ctx.arc(C,C,394,0,Math.PI*2);ctx.lineWidth=2;ctx.strokeStyle='#ffe2a488';ctx.stroke();
- }
- drawWheel();
- let currentRotation=0,playing=false,round=null;
- function setError(message){$('error').style.display=message?'block':'none';$('error').textContent=message||'';}
- function showAmount(num){return Number(num||0).toLocaleString('en-US')}
- function updateJackpot(value){$('jackpot').textContent='$'+showAmount(value)+'.00';$('progress').style.width=Math.min(100,Number(value||0)/700*100)+'%';}
- function formatTime(unix){try{return new Date(unix*1000).toLocaleString('ar-SY',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}catch{return ''}}
- function displayBonuses(list){let holder=$('bonuses');holder.replaceChildren();if(!list?.length){holder.innerHTML='<div class="empty">ما عندك بونصات فعالة حالياً. جرّب حظك مع KONAN ✨</div>';return;}
-   list.forEach(b=>{let row=document.createElement('div');row.className='bonus';const left=document.createElement('strong');left.textContent='BONUS +'+b.percent+'%';const right=document.createElement('small');const remaining=Math.max(0,b.expiresAt-Math.floor(Date.now()/1000));right.textContent='متبقّي '+Math.floor(remaining/3600)+' ساعة و '+Math.floor(remaining%3600/60)+' دقيقة';row.append(left,right);holder.appendChild(row)})
- }
- function displayUsedBonuses(list){
-   const holder=$('usedBonuses');holder.replaceChildren();
-   if(!list?.length){holder.innerHTML='<div class="empty">لا توجد عمليات صرف حديثة مسجّلة.</div>';return;}
-   list.forEach(b=>{const row=document.createElement('div');row.className='bonus';
-     const a=document.createElement('strong');a.textContent='+'+b.percent+'% = '+showAmount(b.amount)+' ل.س';
-     const info=document.createElement('small');info.textContent=formatTime(b.appliedAt);
-     row.append(a,info);holder.appendChild(row);
-   });
- }
- function showModal(title,description,emoji){$('resultTitle').textContent=title;$('resultDescription').textContent=description;$('resultEmoji').textContent=emoji;$('resultModal').classList.add('show')}
- // Only the provided .wav effects are used; no synthesized tick sounds.
- const sounds={spin:$('wheelSpinSound'),win:$('wheelWinSound'),lose:$('wheelLoseSound')};
- sounds.spin.volume=.70;sounds.win.volume=.95;sounds.lose.volume=.90;
- function stopAudio(sound){if(!sound)return;try{sound.pause();sound.currentTime=0}catch(_){}}
- function playAudio(sound){
-   if(!sound)return;
-   try{stopAudio(sound);const promise=sound.play();if(promise?.catch)promise.catch(()=>{});}catch(_){}
- }
- function stopAllAudio(){Object.values(sounds).forEach(stopAudio)}
- function beginSpinAudio(){stopAllAudio();playAudio(sounds.spin)}
- function finishSpinAudio(won){
-   stopAudio(sounds.spin);
-   playAudio(won?sounds.win:sounds.lose);
- }
- window.addEventListener('pagehide',stopAllAudio);
- function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
- // One GPU-composited transform transition replaces ~380 JavaScript frame updates.
- // The canvas is drawn only once, the bot-selected prize/stop position is unchanged.
- function animateTo(index){
-   const targetIndex=Number(index),degrees=360/N;
-   if(!Number.isInteger(targetIndex)||targetIndex<0||targetIndex>=N)
-     return Promise.reject(Error('نتيجة العجلة غير صالحة'));
-   const current=((currentRotation%360)+360)%360;
-   let advance=(360-((current+(targetIndex*degrees))%360))%360;
-   if(advance<4)advance+=360;
-   const final=currentRotation+4*360+advance;
-   const duration=3900;
-   const area=c.parentElement;
-   return new Promise(resolve=>{
-     let settled=false;
-     let watchdog;
-     const endTransform=`translate3d(0,0,0) rotate(${final}deg)`;
-     const onEnd=(event)=>{
-       if(event.target===c && event.propertyName==='transform')finish();
-     };
-     const finish=()=>{
-       if(settled)return;
-       settled=true;
-       clearTimeout(watchdog);
-       c.removeEventListener('transitionend',onEnd);
-       c.style.transition='none';
-       c.style.transform=endTransform;
-       currentRotation=final;
-       area.classList.remove('is-spinning');
-       resolve();
-     };
-     area.classList.add('is-spinning');
-     c.style.transition='none';
-     c.style.transform=`translate3d(0,0,0) rotate(${currentRotation}deg)`;
-     c.addEventListener('transitionend',onEnd);
-     // Two frames are enough to prepare a composited GPU layer without JS per-frame work.
-     requestAnimationFrame(()=>requestAnimationFrame(()=>{
-       if(settled)return;
-       c.style.transition=`transform ${duration}ms cubic-bezier(0.12, 0.76, 0.14, 1)`;
-       c.style.transform=endTransform;
-     }));
-     // Some in-app WebViews omit transitionend after background/foreground changes.
-     watchdog=setTimeout(finish,duration+900);
-   });
- }
- function resultText(r){if(prizePreview){return r.targetIndex===11?['👑 JACKPOT $'+showAmount(r.award),'تم ربح الجاكبوت — .','👑']:['💰 100$','تم ربح الجائزة 100$ — .','💰'];}if(r.bonusPercent)return ['🎁 بونص +'+r.bonusPercent+'%','صار عندك بونص على أول عملية شحن ناجحة خلال 24 ساعة.','🎁'];if(r.award)return ['🎉 مبروك! '+showAmount(r.award)+' ل.س قديمة','الجائزة أضيفت تلقائياً إلى رصيدك داخل البوت.','💰'];return ['✨ حظ أوفر باللفة الجاية','حاول مجدداً بعد حصولك على لفة من عملية شحن مؤهلة.','🎡']}
- async function startSpin(){
-   if(playing||!round)return;
-   playing=true;spinBtn.disabled=true;spinBtn.textContent='🎡 العجلة تدور...';setError('');
-   beginSpinAudio();
-   try{
-     await animateTo(round.targetIndex);
-     finishSpinAudio(Number(round.bonusPercent)>0||Number(round.award)>0);
-     if(navigator.vibrate)navigator.vibrate([60,30,90]);
-     // This link has now displayed its single spin.
-     $('spins').textContent='0';
-     const [title,body,icon]=resultText(round);showModal(title,body,icon);
-     spinBtn.textContent='✅ تم عرض نتيجة اللفة';
-   }catch(e){
-     stopAudio(sounds.spin);setError(e.message||'خطأ أثناء العرض');
-     spinBtn.textContent='افتح لفة جديدة من البوت';spinBtn.disabled=true;
-   }
- }
- function init(){
-   if(!validRound){
-     $('spins').textContent='0';updateJackpot(0);
-     displayBonuses([]);displayUsedBonuses([]);
-     setError('افتح العجلة من زر بوت KONAN للحصول على نتيجة لفة جديدة.');
-     spinBtn.textContent='بانتظار رابط اللفة';return;
-   }
-   round={targetIndex:suppliedIndex,award:effectiveAward,bonusPercent:suppliedBonus};
-   // Each valid wheel URL contains exactly ONE issued spin, already paid for by the bot.
-   // `spinsRemaining` is the wallet's *other* unused spins after this round was issued.
-   // Do not show 0 when the player has just opened this playable round.
-   $('spins').textContent='1';
-   // The large jackpot counter follows the URL amount. For older jackpot-preview
-   // URLs that only specify award, show that same amount on the counter.
-   const shownJackpot=Number.isFinite(jackpotValue)&&jackpotValue>=0?jackpotValue:
-     (prizePreview&&suppliedIndex===11?effectiveAward:0);
-   updateJackpot(shownJackpot);
-   displayBonuses(activeBonuses.filter(b=>b.expiresAt>Math.floor(Date.now()/1000)));
-   displayUsedBonuses(usedBonuses);
-   spinBtn.textContent='🎡 لف العجلة الآن';spinBtn.disabled=false;
- }
- $('spin').addEventListener('click',startSpin);
- $('resultClose').addEventListener('click',()=>$('resultModal').classList.remove('show'));
  $('historyClose').addEventListener('click',()=>$('historyModal').classList.remove('show'));
  $('historyBtn').addEventListener('click',()=>{
    const rows=$('historyRows');rows.replaceChildren();$('historyModal').classList.add('show');
