@@ -284,7 +284,7 @@ body:before{opacity:.055}
      watchdog=setTimeout(finish,duration+900);
    });
  }
- function resultText(r){if(prizePreview){return r.targetIndex===11?['👑 JACKPOT $'+showAmount(r.award),'معاينة تصميم الجاكبوت — بدون تغيير الرصيد.','👑']:['💰 100$','معاينة تصميم جائزة 100$ — بدون تغيير الرصيد.','💰'];}if(r.bonusPercent)return ['🎁 بونص +'+r.bonusPercent+'%','صار عندك بونص على أول عملية شحن ناجحة خلال 24 ساعة.','🎁'];if(r.award)return ['🎉 مبروك! '+showAmount(r.award)+' ل.س قديمة','الجائزة أضيفت تلقائياً إلى رصيدك داخل البوت.','💰'];return ['✨ حظ أوفر باللفة الجاية','حاول مجدداً بعد حصولك على لفة من عملية شحن مؤهلة.','🎡']}
+ function resultText(r){if(prizePreview){return r.targetIndex===11?['👑 JACKPOT $'+showAmount(r.award),'تم ربح الجاكبوت — .','👑']:['💰 100$','تم ربح الجائزة 100$ — .','💰'];}if(r.bonusPercent)return ['🎁 بونص +'+r.bonusPercent+'%','صار عندك بونص على أول عملية شحن ناجحة خلال 24 ساعة.','🎁'];if(r.award)return ['🎉 مبروك! '+showAmount(r.award)+' ل.س قديمة','الجائزة أضيفت تلقائياً إلى رصيدك داخل البوت.','💰'];return ['✨ حظ أوفر باللفة الجاية','حاول مجدداً بعد حصولك على لفة من عملية شحن مؤهلة.','🎡']}
  async function startSpin(){
    if(playing||!round)return;
    playing=true;spinBtn.disabled=true;spinBtn.textContent='🎡 العجلة تدور...';setError('');
